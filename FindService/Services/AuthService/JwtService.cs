@@ -14,7 +14,7 @@ namespace FindService.Services.AuthService
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(Guid userId, string email)
+        public string GenerateJwtToken(Guid userId, string email, bool isAdmin)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
 
@@ -22,7 +22,8 @@ namespace FindService.Services.AuthService
             {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("isAdmin", isAdmin.ToString())
         };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]));

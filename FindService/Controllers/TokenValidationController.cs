@@ -94,14 +94,14 @@ namespace FindService.Controllers
 
             var authorizationHeader = Request.Headers["Authorization"].ToString();
 
-            if (string.IsNullOrEmpty(authorizationHeader))
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
             {
                 return BadRequest(new APIResponse<string>("Invalid Authorization header format."));
             }
 
-            var token = authorizationHeader;
+            var token = authorizationHeader.Substring("Bearer ".Length).Trim();
 
-            var validationParameters = _jwtService.GetValidationParameters();
+            var validationParameters =  _jwtService.GetValidationParameters();
 
             try
             {
@@ -110,6 +110,7 @@ namespace FindService.Controllers
 
                 if (validatedToken is JwtSecurityToken jwtToken)
                 {
+                    // Optionally, you can check claims or other token properties here
                     return Ok(new APIResponse<string>("Token is valid."));
                 }
                 else

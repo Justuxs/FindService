@@ -33,7 +33,8 @@ namespace FindService.Services.UserService
                 Surname = registerUserDto.Surname,
                 Email = registerUserDto.Email,
                 Phone = registerUserDto.Phone,
-                PasswordHash = HashPassword(registerUserDto.Password)
+                PasswordHash = HashPassword(registerUserDto.Password),
+                IsAdmin = false 
             };
 
             _context.Users.Add(user);
@@ -61,7 +62,7 @@ namespace FindService.Services.UserService
                 return new APIResponse<UserDto>("Invalid email or password.");
             }
 
-            var token = _jwtService.GenerateJwtToken(user.Id, user.Email);
+            var token = _jwtService.GenerateJwtToken(user.Id, user.Email, user.IsAdmin);
 
 
             var userDto = new UserDto
