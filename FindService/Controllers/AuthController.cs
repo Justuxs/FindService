@@ -1,5 +1,6 @@
 ﻿using FindService.Dto;
 using FindService.Dto.User;
+using FindService.Services.AuthService;
 using FindService.Services.UserService;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -10,10 +11,12 @@ namespace FindService.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly JwtService _jwtService;
         private readonly UserService _userService;
 
-        public AuthController(UserService userService)
+        public AuthController(JwtService jwtService,UserService userService)
         {
+            _jwtService = jwtService;
             _userService = userService;
         }
         /// <summary>
@@ -77,12 +80,14 @@ namespace FindService.Controllers
         [SwaggerResponse(401, "If the login credentials are incorrect.", typeof(APIResponse<UserDto>))]
         public async Task<IActionResult> Login([FromBody] LoginUserDto loginUserDto)
         {
-            var result = await _userService.LoginAsync(loginUserDto);
+            APIResponse<UserDto> result = await _userService.LoginAsync(loginUserDto);
             if (!result.IsSuccess)
             {
                 return Unauthorized(result);
             }
             return Ok(result);
         }
+
+
     }
 }

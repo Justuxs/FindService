@@ -5,16 +5,19 @@ using FindService.EF;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using FindService.Services.AuthService;
 
 namespace FindService.Services.UserService
 {
     public class UserService
     {
         private readonly ApplicationDbContext _context;
+        private readonly JwtService _jwtService;
 
-        public UserService(ApplicationDbContext context)
+        public UserService(ApplicationDbContext context,JwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
         public async Task<APIResponse<UserDto>> RegisterAsync(RegisterUserDto registerUserDto)
@@ -58,13 +61,17 @@ namespace FindService.Services.UserService
                 return new APIResponse<UserDto>("Invalid email or password.");
             }
 
+            var token = _jwtService.GenerateJwtToken(user.Id, user.Email);
+
+
             var userDto = new UserDto
             {
                 Id = user.Id,
                 Name = user.Name,
                 Surname = user.Surname,
                 Email = user.Email,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Token = token
             };
 
             return new APIResponse<UserDto>(userDto);
