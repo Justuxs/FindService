@@ -104,5 +104,24 @@ namespace FindService.Services.CityService
                 ErrorMessage = null
             };
         }
+
+        public async Task<AdvertisementTypeResponseDto?> GetAdvertisementTypeByIdAsync(Guid id)
+        {
+
+            var type = await _context.AdvertisementTypes
+                .Where(a => a.Id == id)
+                .Select(a => new AdvertisementTypeResponseDto
+                {
+                    Id = a.Id,
+                    Name = a.Name
+                })
+                .FirstOrDefaultAsync();
+
+            if (type == null)
+            {
+                return null;
+            }
+            return type;
+        }
     }
 }

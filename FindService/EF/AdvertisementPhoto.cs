@@ -6,5 +6,6 @@
         public Guid AdvertisementId { get; set; }
         public Guid PhotoId { get; set; }
         public int Position { get; set; }
+        public bool isMain { get; set; } = false;
     }
 }

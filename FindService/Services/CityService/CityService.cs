@@ -107,5 +107,21 @@ namespace FindService.Services.CityService
                 ErrorMessage = null
             };
         }
+
+        internal async Task<List<CityResponseDto>> GetAllAdvertisementCitiesAsync(Guid adid)
+        {
+            List<Guid> citiesIds = await _context.AdvertisementCities.Where(e => e.AdvertisementId == adid).Select(e => e.Id).ToListAsync();
+
+            var cities = await _context.Cities
+            .Where(e => citiesIds.Contains(e.Id))
+            .Select(c => new CityResponseDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Position = c.Position
+            }).ToListAsync();
+
+            return cities;
+        }
     }
 }
