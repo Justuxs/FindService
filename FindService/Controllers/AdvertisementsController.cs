@@ -9,6 +9,7 @@ using FindService.EF;
 using FindService.EF.Context;
 using FindService.Services.CityService;
 using FindService.Dto;
+using FluentValidation;
 
 namespace FindService.Controllers
 {
@@ -18,11 +19,14 @@ namespace FindService.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly AdvertisementService _advertisementService;
+        private readonly IValidator<AdvertisementDtoRequest> _validator;
 
-        public AdvertisementsController(ApplicationDbContext context, AdvertisementService advertisementService)
+
+        public AdvertisementsController(ApplicationDbContext context, AdvertisementService advertisementService, IValidator<AdvertisementDtoRequest> validator)
         {
             _context = context;
             _advertisementService=advertisementService;
+            _validator=validator;
         }
 
         // GET: api/Advertisements
@@ -74,15 +78,20 @@ namespace FindService.Controllers
         }
 
         // POST: api/Advertisements
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Advertisement>> PostAdvertisement(Advertisement advertisement)
+        public async Task<ActionResult> CreateAdvertisement(AdvertisementDtoRequest request)
         {
-            _context.Advertisements.Add(advertisement);
-            await _context.SaveChangesAsync();
+            var validationResult = await _validator.ValidateAsync(request);
 
-            return CreatedAtAction("GetAdvertisement", new { id = advertisement.Id }, advertisement);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+            var result = await _advertisementService.CreateAdvertisementAsync(request);
+            return Ok(result);
         }
+
+
 
         // DELETE: api/Advertisements/5
         [HttpDelete("{id}")]
