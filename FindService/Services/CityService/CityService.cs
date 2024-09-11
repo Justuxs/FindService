@@ -108,6 +108,11 @@ namespace FindService.Services.CityService
             };
         }
 
+        internal async Task<AdvertisementType?> GetAdTypeByIdAsync(Guid? advertisementTypeId)
+        {
+            return  await _context.AdvertisementTypes.FirstOrDefaultAsync(e=>e.Id == advertisementTypeId);
+        }
+
         internal async Task<List<CityResponseDto>> GetAllAdvertisementCitiesAsync(Guid adid)
         {
             List<Guid> citiesIds = await _context.AdvertisementCities.Where(e => e.AdvertisementId == adid).Select(e => e.Id).ToListAsync();
@@ -121,6 +126,12 @@ namespace FindService.Services.CityService
                 Position = c.Position
             }).ToListAsync();
 
+            return cities;
+        }
+
+        internal async Task<List<City>> GetCitiesByIdsAsync(List<Guid> citiesId)
+        {
+            var cities = await _context.Cities.Where(e => citiesId.Contains(e.Id)).ToListAsync();
             return cities;
         }
     }

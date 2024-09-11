@@ -45,5 +45,25 @@ namespace FindService.Services.CityService
 
             return photos;
         }
+
+        internal async void SaveAdPhotos(Photo mainPhoto, List<Photo> photos, Guid id)
+        {
+            await _context.Photos.AddAsync(mainPhoto);
+            await _context.Photos.AddRangeAsync(photos);
+            List<AdvertisementPhoto> advertisementPhotos = new List<AdvertisementPhoto>();
+            advertisementPhotos.Add(
+                new AdvertisementPhoto() { isMain = true, Position = 0, AdvertisementId = id , PhotoId = mainPhoto.Id}
+            );
+            int pos = 1;
+            foreach (Photo photo in photos)
+            {
+                advertisementPhotos.Add(
+                     new AdvertisementPhoto() { isMain = false, Position = pos, AdvertisementId = id, PhotoId = photo.Id }
+                ); ;
+                pos++;
+            }
+            await _context.AdvertisementPhotos.AddRangeAsync(advertisementPhotos);
+            await _context.SaveChangesAsync();
+        }
     }
 }

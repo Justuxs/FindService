@@ -1,7 +1,10 @@
+using FindService.EF;
 using FindService.EF.Context;
 using FindService.Services.AuthService;
 using FindService.Services.CityService;
 using FindService.Services.UserService;
+using FindService.Services.Validators;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +27,9 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+
+builder.Services.AddTransient<IValidator<AdvertisementDtoRequest>, AdvertisementDtoRequestValidator>();
+
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

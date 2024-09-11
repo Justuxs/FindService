@@ -24,7 +24,6 @@ namespace FindService.Services.CityService
             _photoService = photoService;
         }
 
-
         private async Task<AdvertisementDtoResponse> ToDtoResponseAsync(Advertisement advertisement)
         {
             AdvertisementDtoResponse advertisementDtoResponse = new AdvertisementDtoResponse();
@@ -47,11 +46,41 @@ namespace FindService.Services.CityService
 
         private async Task<List<AdvertisementDtoResponse>> ToDtoResponseAsync(List<Advertisement> advertisements)
         {
-            var tasks = advertisements.Select(advertisement => ToDtoResponseAsync(advertisement));
-            var results =  await Task.WhenAll(tasks);
-            return results.ToList();
+            var dtoResponses = new List<AdvertisementDtoResponse>();
+
+            foreach (var advertisement in advertisements)
+            {
+                var dtoResponse = await ToDtoResponseAsync(advertisement);
+                dtoResponses.Add(dtoResponse);
+            }
+
+            return dtoResponses;
         }
 
+
+        private Advertisement ToEntity(AdvertisementDtoRequest dtoRequest)
+        {
+            if (dtoRequest == null)
+            {
+                throw new ArgumentNullException(nameof(dtoRequest), "DTO cannot be null");
+            }
+
+            var advertisement = new Advertisement
+            {
+                Id = Guid.NewGuid(),
+                UserId = dtoRequest.UserId,
+                Title = dtoRequest.Title,
+                Description = dtoRequest.Description,
+                Price = dtoRequest.Price,
+                Phone = dtoRequest.Phone,
+                Email = dtoRequest.Email,
+                CreateTimeStamp = DateTime.UtcNow,
+                AdvertisementTypeId = dtoRequest.AdvertisementTypeId,
+                IsActive = true,
+                IsDeleted = false
+            };
+            return advertisement;
+        }
 
         public async Task<APIResponse<List<AdvertisementDtoResponse>>> GetAdvertisements()
         {
@@ -112,5 +141,55 @@ namespace FindService.Services.CityService
             }
         }
 
+        public async Task<APIResponse<AdvertisementDtoResponse>> CreateAdvertisementAsync(AdvertisementDtoRequest advertisementDtoRequest)
+        {
+            try
+            {
+                List<City> cities = await _cityService.GetCitiesByIdsAsync(advertisementDtoRequest.CitiesId);
+                if (cities == null)
+                {
+                    return new APIResponse<AdvertisementDtoResponse>
+                    {
+                        Data = null,
+                        IsSuccess = false,
+                        ErrorMessage = $"No cities found."
+                    };
+                }
+
+                AdvertisementType? adType = await _cityService.GetAdTypeByIdAsync(advertisementDtoRequest.AdvertisementTypeId);
+                if (adType == null)
+                {
+                    return new APIResponse<AdvertisementDtoResponse>
+                    {
+                        Data = null,
+                        IsSuccess = false,
+                        ErrorMessage = $"Advertisement type with id {advertisementDtoRequest.AdvertisementTypeId} not found."
+                    };
+                }
+
+                Advertisement advertisement = ToEntity(advertisementDtoRequest);
+                _context.Advertisements.Add(advertisement);
+                await _context.SaveChangesAsync();
+
+
+                Photo mainPhoto = new Photo() { Base64 = advertisementDtoRequest.MainPhotoBase64 };
+                List<Photo> photos = new();
+                foreach(string photo in advertisementDtoRequest.PhotosBase64) {
+                    photos.Add(new Photo() { Base64 = photo });
+                }
+                _photoService.SaveAdPhotos(mainPhoto, photos, advertisement.Id);
+
+                return await GetAdvertisementByIdAsync(advertisement.Id);
+            }
+            catch (Exception ex)
+            {
+                return new APIResponse<AdvertisementDtoResponse>
+                {
+                    Data = null,
+                    IsSuccess = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
     }
 }
